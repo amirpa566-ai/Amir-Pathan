@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#173b35">
+<title>My Daily Life Planner</title>
+<style>
+:root{--green:#173b35;--mint:#e8f3ee;--bg:#f4f7f5;--ink:#1d2925;--muted:#687771;--line:#dce6e0;--white:#fff;--gold:#f3c969}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
+header{background:var(--green);color:white;padding:22px 17px 20px;border-radius:0 0 22px 22px}
+header h1{font-size:23px;margin:0 0 5px}header p{margin:0;color:#d6e6df;font-size:13px}
+main{max-width:760px;margin:auto;padding:14px}
+.datebar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin:3px 0 14px}
+input,textarea,select,button{font:inherit}input,textarea,select{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:white;color:var(--ink)}
+.datebar input{max-width:180px}
+.tabs{display:flex;gap:7px;overflow:auto;padding-bottom:10px}
+.tab{border:1px solid var(--line);background:white;border-radius:999px;padding:9px 13px;white-space:nowrap;color:var(--ink)}
+.tab.active{background:var(--green);color:white;border-color:var(--green)}
+.panel{display:none}.panel.active{display:block}
+.card{background:white;border:1px solid var(--line);border-radius:15px;padding:15px;margin:0 0 13px;box-shadow:0 2px 8px #173b3508}
+h2{font-size:17px;margin:0 0 12px}h3{font-size:14px;margin:0 0 8px}
+.muted{color:var(--muted);font-size:12px}.row{display:flex;gap:9px;align-items:center}.row>*{flex:1}
+.item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #edf1ee}.item:last-child{border:0}
+.item input[type=checkbox]{width:19px;height:19px;accent-color:var(--green);flex:0 0 auto}
+.item .task{flex:1}.item.done .task{text-decoration:line-through;color:#829089}
+.time{font-size:12px;color:var(--muted);min-width:76px}
+button{border:0;border-radius:10px;padding:10px 13px;background:var(--green);color:white;cursor:pointer}
+button.secondary{background:var(--mint);color:var(--green)}button.danger{background:#fff0ed;color:#a13b2b}
+.small{padding:7px 10px;font-size:12px}
+.addrow{display:flex;gap:8px;margin-top:10px}.addrow input{flex:1;min-width:0}
+.progress{height:9px;background:#e9efeb;border-radius:9px;overflow:hidden;margin:8px 0}.progress span{display:block;height:100%;background:#39866c;width:0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:var(--mint);padding:12px;border-radius:12px}.stat strong{display:block;font-size:20px;color:var(--green)}
+textarea{min-height:90px;resize:vertical}
+.schedule-row{display:grid;grid-template-columns:78px 1fr 75px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid #edf1ee}
+.schedule-row input{padding:8px}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:15px}
+@media(max-width:420px){.schedule-row{grid-template-columns:67px 1fr 70px;gap:5px}.datebar{align-items:flex-start}.stats{gap:6px}.stat{padding:9px}}
+</style>
+</head>
+<body>
+<header><h1>My Daily Life Planner</h1><p>Plan your day • Build good habits • Track what you learn</p></header>
+<main>
+<div class="datebar"><div><strong id="todayLabel">Today</strong><div class="muted">Your personal daily dashboard</div></div><input type="date" id="dayDate"></div>
+<div class="tabs">
+<button class="tab active" data-tab="overview">Overview</button>
+<button class="tab" data-tab="routine">Daily Routine</button>
+<button class="tab" data-tab="prayers">Prayer Times</button>
+<button class="tab" data-tab="learning">Learning Log</button>
+<button class="tab" data-tab="notes">Daily Notes</button>
+</div>
+<section class="panel active" id="overview">
+<div class="card"><h2>Today's Progress</h2><div class="stats"><div class="stat"><strong id="doneCount">0</strong><span class="muted">Completed</span></div><div class="stat"><strong id="totalCount">0</strong><span class="muted">Daily tasks</span></div><div class="stat"><strong id="percent">0%</strong><span class="muted">Progress</span></div></div><div class="progress"><span id="progressBar"></span></div></div>
+<div class="card"><h2>Today's Priorities</h2><div id="overviewTasks"></div><p class="muted">Tick tasks as you complete them in the Daily Routine tab.</p></div>
+<div class="card"><h2>Quick Reflection</h2><p class="muted">What was the best thing you did today?</p><textarea id="reflection" placeholder="Write a short reflection..."></textarea><button class="small" onclick="saveField('reflection')">Save reflection</button></div>
+</section>
+<section class="panel" id="routine">
+<div class="card"><h2>My Daily Routine</h2><p class="muted">Edit the times and task names to match your real timetable.</p><div id="routineList"></div><div class="addrow"><input id="newTask" placeholder="Add another daily task"><button onclick="addTask()">Add</button></div></div>
+<div class="card"><h2>Sleep Schedule</h2><div class="row"><label class="muted">Bedtime<input type="time" id="bedtime" value="00:00"></label><label class="muted">Wake-up time<input type="time" id="waketime" value="06:00"></label></div><button class="small" onclick="saveSleep()" style="margin-top:10px">Save sleep schedule</button></div>
+</section>
+<section class="panel" id="prayers">
+<div class="card"><h2>Daily Prayer Tracker</h2><p class="muted">These are your example times. Change them according to your local prayer timetable.</p><div id="prayerList"></div><div class="muted" style="margin-top:10px">Prayer times can change by date and location. Confirm the correct timings locally.</div></div>
+</section>
+<section class="panel" id="learning">
+<div class="card"><h2>What I Learned Today</h2><label class="muted">Subject / Skill<input id="learnSubject" placeholder="e.g. Programming in C"></label><label class="muted" style="display:block;margin-top:10px">Topic I studied<textarea id="learnTopic" placeholder="What did you study today?"></textarea></label><label class="muted" style="display:block;margin-top:10px">What I understood / still need to practise<textarea id="learnNotes" placeholder="Write in your own words..."></textarea></label><button onclick="addLearning()" style="margin-top:10px">Save Learning Entry</button></div>
+<div class="card"><h2>Learning History</h2><div id="learningHistory" class="muted">No learning entries yet.</div></div>
+</section>
+<section class="panel" id="notes">
+<div class="card"><h2>Daily Journal</h2><p class="muted">Record important events, college activities, ideas, challenges, or things to remember.</p><textarea id="journal" placeholder="Today, I..."></textarea><button class="small" onclick="saveField('journal')" style="margin-top:9px">Save daily journal</button></div>
+<div class="card"><h2>Tomorrow's Important Tasks</h2><textarea id="tomorrow" placeholder="1. ...&#10;2. ..."></textarea><button class="small" onclick="saveField('tomorrow')" style="margin-top:9px">Save for tomorrow</button></div>
+<div class="card"><button class="secondary" onclick="exportData()">Export my data</button> <button class="danger" onclick="clearDay()">Clear this date</button><p class="muted">Your entries are saved in this browser on this device. Export regularly for a backup.</p></div>
+</section>
+</main><footer>My Daily Life Planner • Simple, private, and stored on your device</footer>
+<script>
+const defaults=[
+{time:"06:00",task:"Wake up, freshen up and make the bed"},
+{time:"06:20",task:"Fajr prayer"},
+{time:"06:40",task:"Quran / morning reflection"},
+{time:"07:00",task:"Exercise and personal preparation"},
+{time:"08:00",task:"Breakfast and get ready for college"},
+{time:"09:00",task:"College / classes"},
+{time:"13:15",task:"Zuhr prayer"},
+{time:"14:00",task:"Lunch / rest"},
+{time:"16:00",task:"Asr prayer"},
+{time:"17:15",task:"Maghrib prayer"},
+{time:"17:30",task:"Study / revise college subjects"},
+{time:"19:00",task:"Isha prayer"},
+{time:"19:30",task:"Learn a CS skill / programming practice"},
+{time:"21:00",task:"Family time / personal tasks"},
+{time:"22:00",task:"Review today and plan tomorrow"},
+{time:"00:00",task:"Sleep"}
+];
+const prayers=[["Fajr","06:20"],["Zuhr","13:15"],["Asr","16:00"],["Maghrib","17:15"],["Isha","19:00"]];
+let dateInput=document.getElementById("dayDate"), currentDate=new Date().toISOString().slice(0,10);
+dateInput.value=currentDate;
+let db=JSON.parse(localStorage.getItem("dailyPlannerDB")||"{}");
+function day(){if(!db[dateInput.value])db[dateInput.value]={tasks:defaults.map((x,i)=>({...x,id:i,done:false})),prayers:prayers.map(x=>({name:x[0],time:x[1],done:false})),learning:[],reflection:"",journal:"",tomorrow:"",bedtime:"00:00",waketime:"06:00"};return db[dateInput.value]}
+function save(){localStorage.setItem("dailyPlannerDB",JSON.stringify(db));render()}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function render(){
+let d=day();document.getElementById("todayLabel").textContent=dateInput.value===currentDate?"Today":dateInput.value;
+let done=d.tasks.filter(x=>x.done).length,total=d.tasks.length,p=total?Math.round(done/total*100):0;
+document.getElementById("doneCount").textContent=done;document.getElementById("totalCount").textContent=total;document.getElementById("percent").textContent=p+"%";document.getElementById("progressBar").style.width=p+"%";
+document.getElementById("routineList").innerHTML=d.tasks.map((x,i)=>`<div class="item ${x.done?'done':''}"><input type="checkbox" ${x.done?'checked':''} onchange="toggleTask(${i},this.checked)"><span class="time">${esc(x.time)}</span><span class="task">${esc(x.task)}</span><button class="danger small" onclick="removeTask(${i})">×</button></div>`).join("");
+document.getElementById("overviewTasks").innerHTML=d.tasks.slice(0,8).map((x,i)=>`<div class="item ${x.done?'done':''}"><input type="checkbox" ${x.done?'checked':''} onchange="toggleTask(${i},this.checked)"><span class="time">${esc(x.time)}</span><span class="task">${esc(x.task)}</span></div>`).join("");
+document.getElementById("prayerList").innerHTML=d.prayers.map((x,i)=>`<div class="item ${x.done?'done':''}"><input type="checkbox" ${x.done?'checked':''} onchange="togglePrayer(${i},this.checked)"><span class="task"><strong>${esc(x.name)}</strong><div class="muted">Prayer time</div></span><input aria-label="${esc(x.name)} time" type="time" style="width:110px" value="${esc(x.time)}" onchange="setPrayerTime(${i},this.value)"></div>`).join("");
+document.getElementById("learningHistory").innerHTML=d.learning.length?d.learning.slice().reverse().map(x=>`<div class="item"><div class="task"><strong>${esc(x.subject)}</strong><div>${esc(x.topic)}</div><div class="muted">${esc(x.notes)}</div></div></div>`).join(""):"No learning entries yet.";
+["reflection","journal","tomorrow"].forEach(k=>document.getElementById(k).value=d[k]||"");
+document.getElementById("bedtime").value=d.bedtime;document.getElementById("waketime").value=d.waketime;
+}
+function toggleTask(i,v){day().tasks[i].done=v;save()}
+function removeTask(i){day().tasks.splice(i,1);save()}
+function addTask(){let v=document.getElementById("newTask").value.trim();if(!v)return;day().tasks.push({time:"",task:v,done:false});document.getElementById("newTask").value="";save()}
+function togglePrayer(i,v){day().prayers[i].done=v;save()}
+function setPrayerTime(i,v){day().prayers[i].time=v;localStorage.setItem("dailyPlannerDB",JSON.stringify(db))}
+function saveField(k){day()[k]=document.getElementById(k).value;localStorage.setItem("dailyPlannerDB",JSON.stringify(db));alert("Saved on this device.")}
+function saveSleep(){day().bedtime=document.getElementById("bedtime").value;day().waketime=document.getElementById("waketime").value;save();alert("Sleep schedule saved.")}
+function addLearning(){let s=document.getElementById("learnSubject").value.trim(),t=document.getElementById("learnTopic").value.trim(),n=document.getElementById("learnNotes").value.trim();if(!s||!t){alert("Please enter at least a subject and topic.");return}day().learning.push({subject:s,topic:t,notes:n});["learnSubject","learnTopic","learnNotes"].forEach(k=>document.getElementById(k).value="");save()}
+function clearDay(){if(confirm("Delete all saved entries for this date?")){delete db[dateInput.value];save()}}
+function exportData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="my-daily-planner-backup.json";a.click();URL.revokeObjectURL(a.href)}
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tab,.panel").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.getElementById(b.dataset.tab).classList.add("active")}));
+dateInput.addEventListener("change",render);render();
+</script>
+</body></html>
